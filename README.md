@@ -36,7 +36,7 @@ while ! docker-compose exec mysql mysqladmin --user=root --password=root --host 
     echo "Waiting for database connection..."
     sleep 2
 done
-echo -e "\033[1;92m Acesso Site: hhttp://localhost\033[m"
+echo -e "\033[1;92m Acesso Site: http://localhost\033[m"
 python -m webbrowser "http://localhost" > /dev/null 2>&1
 ```
 
