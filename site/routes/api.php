@@ -24,4 +24,6 @@ Route::group([
     Route::post('auth/logout', 'AuthController@logout');
     Route::post('auth/refresh', 'AuthController@refresh');
     Route::post('auth/me', 'AuthController@me');
+
+    Route::apiResource('crud/products', 'ProductApiController');
 });
