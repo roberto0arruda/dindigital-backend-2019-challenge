@@ -3,19 +3,25 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use Tymon\JWTAuth\JWTAuth;
 
 class AuthController extends Controller
 {
+    /**
+     * @var JWTAuth
+     */
+    private $jwtAuth;
+
     /**
      * Create a new AuthController instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(JWTAuth $jwtAuth)
     {
         // $this->middleware('auth:api', ['except' => ['login']]);
+        $this->jwtAuth = $jwtAuth;
     }
 
     /**
@@ -25,12 +31,12 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login()
+    public function login(Request $request)
     {
-        $credentials = request(['email', 'password']);
+        $credentials = $request->only('email', 'password');
 
-        if (! $token = auth()->attempt($credentials) ) {
-            return responder()->error('unauthorized' , 'Usuário ou senha invalidos')->respond(401);
+        if (! $token = $this->jwtAuth->attempt($credentials) ) {
+            return responder()->error('unauthorized', 'Usuário ou senha invalidos')->respond(401);
         }
 
         return responder()->success([
@@ -47,11 +53,11 @@ class AuthController extends Controller
      */
     public function me()
     {
-        try {
-            return responder()->success(auth()->userOrFail())->only('id', 'name', 'email')->respond();
-        } catch (\Throwable $th) {
-            return responder()->error('', 'Acesso não autorizado')->respond(403);
+        if (! $user = $this->jwtAuth->parseToken()->authenticate()) {
+            return responder()->error('unauthenticated', 'Acesso não autorizado')->respond(403);
         }
+
+        return responder()->success($user)->only('id', 'name', 'email')->respond();
     }
 
     /**
@@ -61,14 +67,9 @@ class AuthController extends Controller
      */
     public function logout()
     {
-        try {
-            auth()->logout();
+        auth()->logout();
 
-            return responder()->success('message', 'Usuário deslogado com sucesso')->respond();
-        } catch (\Throwable $th) {
-            //throw $th;
-            return responder()->error('', 'Acesso não autorizado')->respond(403);
-        }
+        return responder()->success('message', 'Usuário deslogado com sucesso')->respond();
     }
 
     /**
@@ -80,16 +81,12 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        try {
-            return responder()->success([
-                'access_token' => auth()->refresh(),
+        $newToken = $this->jwtAuth->refresh($this->jwtAuth->getToken());
+
+        return responder()->success([
+                'access_token' => $newToken,
                 'token_type' => 'bearer',
                 'expires_in_seconds' => auth()->factory()->getTTL() * 60
-            ])->respond();
-        } catch (\Throwable $th) {
-            //throw $th;
-            return responder()->error('', 'Acesso não autorizado')->respond(403);
-        }
-
+        ])->respond();
     }
 }
