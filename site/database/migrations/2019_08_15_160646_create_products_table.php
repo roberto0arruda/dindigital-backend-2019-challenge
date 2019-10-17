@@ -16,8 +16,8 @@ class CreateProductsTable extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('nome');
-            $table->float('preco');
-            $table->float('peso');
+            $table->decimal('preco', 10, 2);
+            $table->decimal('peso', 10, 2);
             $table->timestamps();
         });
     }

@@ -35,15 +35,15 @@ class ProductApiController extends Controller
     public function store(Request $request)
     {
         try {
-            $this->products::create($request->all());
+            $product = $this->products::create($request->all());
 
-            return responder()->success('message', 'Criado com sucesso!')->respond(201);
+            return responder()->success($product)->respond(201);
         } catch (\Exception $e) {
             if ( config('app.debug') ) {
                 return response()->json(['msg' => $e->getMessage()]);
             }
 
-            return responder()->error('message', 'Erro ao criar')->respond();
+            return responder()->error('error', 'Erro ao criar')->respond();
         }
     }
 
@@ -56,9 +56,13 @@ class ProductApiController extends Controller
     public function show($id)
     {
         try {
-            return responder()->success($this->products::find($id))->respond();
-        } catch (\Throwable $th) {
-            //throw $th;
+            return responder()->success($this->products::findOrFail($id))->respond();
+        } catch (\Exception $e) {
+            if ( config('app.debug') ) {
+                return response()->json(['msg' => $e->getMessage()]);
+            }
+
+            return responder()->error('error', 'Produto não encontrado')->respond();
         }
     }
 
@@ -72,15 +76,15 @@ class ProductApiController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $atualizado = $this->products::find($id)->update($request->all());
+            $this->products::find($id)->update($request->all());
 
-            return responder()->success($atualizado)->respond(201);
+            return responder()->success($this->products::find($id))->respond(201);
         } catch (\Exception $e) {
             if ( config('app.debug') ) {
                 return responder()->error('message', $e->getMessage())->respond();
             }
 
-            return responder()->error('message', 'Erro ao atualizar')->respond();
+            return responder()->error('error', 'Erro ao atualizar')->respond();
         }
     }
 
@@ -95,13 +99,13 @@ class ProductApiController extends Controller
         try {
             $this->products::destroy($id);
 
-            return responder()->success('message', 'Deletado com sucesso')->respond(200);
+            return responder()->success()->respond(200);
         } catch (\Exception $e) {
             if ( config('app.debug') ) {
                 return response()->json(['msg' => $e->getMessage()]);
             }
 
-            return responder()->error('message', 'Erro ao deletar')->respond();
+            return responder()->error('error', 'Erro ao deletar')->respond();
         }
     }
 }
